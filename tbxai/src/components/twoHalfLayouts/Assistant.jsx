@@ -16,6 +16,7 @@ const Assistant = () => {
   // Handle chat submit
   const handleChat = (e) => {
     e.preventDefault();
+    if(!e.target.value) return; 
     if (!chatInput.trim()) return;
 
     setChatData((prev) => [...prev, { text: chatInput, from: "user" }]);

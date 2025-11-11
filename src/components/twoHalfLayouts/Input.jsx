@@ -9,7 +9,7 @@ const Input = ({ handleChange, value, handleSubmit, inputRef }) => {
 
   // Initialize Speech Recognition
   useEffect(() => {
-    if (!("webkitSpeechRecognition" in window)) {
+    if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) {
       toast.error("Speech Recognition not supported in this browser");
       return;
     }
@@ -34,7 +34,7 @@ const Input = ({ handleChange, value, handleSubmit, inputRef }) => {
         currentTranscript += event.results[i][0].transcript;
       }
       transcriptRef.current = currentTranscript;
-      handleChange({ target: { value: currentTranscript } }); // update input
+      handleChange({ target: { value: currentTranscript } });
     };
 
     recognition.onerror = (e) => {
@@ -60,7 +60,6 @@ const Input = ({ handleChange, value, handleSubmit, inputRef }) => {
       recognitionInstance.stop();
       toast("🧠 Processing...");
       setListening(false);
-      // Send transcript as a message
       if (transcriptRef.current.trim()) {
         handleSubmit({
           preventDefault: () => {},
@@ -73,27 +72,60 @@ const Input = ({ handleChange, value, handleSubmit, inputRef }) => {
     }
   };
 
+  // Keyboard handling (Shift+Enter = newline, Enter = submit)
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
+  };
+
+  // Auto-resize textarea height like ChatGPT
+  useEffect(() => {
+    const el = inputRef?.current;
+    if (el) {
+      el.style.height = "auto";
+      el.style.height = Math.min(el.scrollHeight, 200) + "px"; // cap height
+    }
+  }, [value]);
+
+  const onFormSubmit = (e) => {
+    e.preventDefault();
+    if (!value.trim()) return;
+    handleSubmit(e);
+  };
+
   return (
     <form
-      onSubmit={handleSubmit}
-      className="flex items-center bg-white border border-gray-300 rounded-full w-full px-4 py-2 shadow-sm focus-within:ring-2 focus-within:ring-sky-400 transition"
+      onSubmit={onFormSubmit}
+      className="flex items-end bg-white border border-gray-300 rounded-2xl w-full px-4 py-2 shadow-sm focus-within:ring-2 focus-within:ring-sky-400 transition"
+      style={{ minHeight: "50px" }}
     >
       <Toaster position="top-center" />
-      {/* Input Field */}
-      <input
+
+      {/* ChatGPT-style Textarea */}
+      <textarea
         ref={inputRef}
-        type="text"
+        rows={1}
         onChange={handleChange}
+        onKeyDown={handleKeyDown}
         value={value}
-        placeholder="Type or speak..."
-        className="flex-1 bg-transparent outline-none border-none text-gray-800 placeholder-gray-400 px-2"
+        placeholder="Speak or Type a message..."
+        className="flex-1 bg-transparent outline-none border-none text-gray-800 placeholder-gray-400 resize-none overflow-y-auto leading-snug max-h-[200px]"
+        style={{
+          paddingRight: "0.5rem",
+          paddingTop: "0.4rem",
+          paddingBottom: "0.4rem",
+          fontSize: "0.95rem",
+          lineHeight: "1.4rem",
+        }}
       />
 
       {/* Mic Button */}
       <button
         type="button"
         onClick={handleVoiceToggle}
-        className={`ml-2 p-2 rounded-full transition ${
+        className={`ml-2 p-2 rounded-full transition shrink-0 ${
           listening
             ? "bg-red-500 text-white animate-pulse"
             : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -106,7 +138,7 @@ const Input = ({ handleChange, value, handleSubmit, inputRef }) => {
       {/* Send Button */}
       <button
         type="submit"
-        className="ml-2 p-2 bg-sky-500 hover:bg-sky-600 text-white rounded-full transition"
+        className="ml-2 p-2 bg-sky-500 hover:bg-sky-600 text-white rounded-full transition shrink-0"
         title="Send message"
       >
         <img

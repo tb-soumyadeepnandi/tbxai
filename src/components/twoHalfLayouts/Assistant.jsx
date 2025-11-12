@@ -70,10 +70,10 @@ const Assistant = () => {
             className="h-20 w-20 object-contain opacity-90"
           />
           <div>
-            <h1 className="text-xl font-semibold text-gray-800">
+            <h1 className="text-xl font-semibold text-white">
               tbXMS Assistant
             </h1>
-            <p className="text-gray-500 text-sm">
+            <p className="text-white text-sm">
               Ask me anything to get started
             </p>
           </div>
